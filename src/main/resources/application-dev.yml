@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: tasks
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+security:
+  jwt:
+    secret-key: e9a6bfc521767ba5a2c7dc6242df3da26f8586aef53d6f947d6ab14473fb9965
+    expiration-time: 1200000

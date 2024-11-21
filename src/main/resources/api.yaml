@@ -1,0 +1,703 @@
+openapi: 3.0.3
+info:
+  title: Task Management
+  description: Необходимо разработать простую систему управления задачами
+  version: 0.0.1
+  contact:
+    email: aidarkhalilov4021@mail.ru
+servers:
+  - url: 'http://localhost:8080/api/v1'
+tags:
+  - name: tasks
+    description: Функционал управления задачами
+  - name: auth
+    description: Функционал регистрации и авторизации пользователя
+
+paths:
+  /tasks:
+    get:
+      tags:
+        - tasks
+      operationId: getTasks
+      summary: Получение списка задач
+      description: Получение списка задач с возможностью фильтрации
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: author
+          in: query
+          description: Автор задачи
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: assignee
+          in: query
+          description: Исполнитель задачи
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: page
+          in: query
+          description: Номер страницы
+          required: true
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: Количество элементов на странице
+          required: true
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Список задач
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+        '401':
+          description: Пользователь не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Доступ запрещен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags:
+        - tasks
+      operationId: createTask
+      summary: Создание задачи
+      description: Создание задачи с возможность валидации входных данных
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskRq'
+      responses:
+        '201':
+          description: Задача успешно создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Ошибка валидации данных задачи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Пользователь не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Доступ запрещен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /tasks/{taskId}:
+    get:
+      tags:
+        - tasks
+      operationId: getTask
+      summary: Получение информации о конкретной задаче
+      description: Получить информацию о задаче по её идентификатору
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Информация о задаче
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '401':
+          description: Пользователь не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Доступ запрещен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Задача с данным идентификатором не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - tasks
+      operationId: updateTask
+      summary: Редактирование задачи
+      description: Изменить содержимое задачи по её идентификатору
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskRq'
+      responses:
+        '200':
+          description: Содержимое задачи успешно изменено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Ошибка валидации данных задачи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Пользователь не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Доступ запрещен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Задача с данным идентификатором не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - tasks
+      operationId: deleteTask
+      summary: Удаление задачи
+      description: Удалить задачу по его идентификатору
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Задача успешно удалена
+        '401':
+          description: Пользователь не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Доступ запрещен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Задача с данным идентификатором не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /tasks/{taskId}/status:
+    patch:
+      tags:
+        - tasks
+      operationId: updateStatus
+      summary: Изменение статуса задачи
+      description: Изменить статус задачи по её идентификатору
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: status
+          in: query
+          description: Новый статус задачи
+          required: true
+          schema:
+            $ref: '#/components/schemas/TaskStatus'
+      responses:
+        '200':
+          description: Статус успешно изменен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Ошибка валидации данных (неверный статус задачи)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Пользователь не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Доступ запрещен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Задача с данным идентификатором не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /tasks/{taskId}/priority:
+    patch:
+      tags:
+        - tasks
+      operationId: updatePriority
+      summary: Изменение приоритета задачи
+      description: Изменить приоритет задачи по её идентификатору
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: priority
+          in: query
+          description: Новый приоритет задачи
+          required: true
+          schema:
+            $ref: '#/components/schemas/TaskPriority'
+      responses:
+        '200':
+          description: Приоритет успешно изменен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Ошибка валидации данных (неверный приоритет задачи)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Пользователь не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Доступ запрещен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Задача с данным идентификатором не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /tasks/{taskId}/assignee:
+    patch:
+      tags:
+        - tasks
+      operationId: updateAssignee
+      summary: Назначение исполнителя задачи
+      description: Назначить исполнителя задачи по её идентификатору
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: assigneeId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Исполнитель успешно назначен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Ошибка валидации данных (исполнитель не найден)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Пользователь не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Доступ запрещен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Задача с данным идентификатором не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /tasks/{taskId}/comments:
+    post:
+      tags:
+        - tasks
+      operationId: submitComment
+      summary: Комментирование задачи
+      description: Оставить комментарий к задаче по её идентификатору
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentRq'
+      responses:
+        '201':
+          description: Комментарий успешно оставлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Ошибка валидации данных
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Пользователь не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Доступ запрещен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Задача с данным идентификатором не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /auth/signup:
+    post:
+      tags:
+        - auth
+      operationId: signUp
+      summary: Регистрация пользователя
+      description: Зарегистрирорвать нового пользователя в системе с ролью "Пользователь"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignUpRq'
+      responses:
+        '201':
+          description: Пользователь успешно зарегистрирован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Jwt'
+        '400':
+          description: Ошибка переданных данных
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /auth/signin:
+    post:
+      tags:
+        - auth
+      operationId: signIn
+      summary: Авторизация пользователя
+      description: Авторизоваться в системе с помощью имени пользователя и пароля
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignInRq'
+      responses:
+        '200':
+          description: Авторизация успешна
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Jwt'
+        '401':
+          description: Пользователь не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Уникальный идентификатор задачи
+          example: 42
+        title:
+          type: string
+          description: Заголовок задачи
+          example: 'Разработка новой функции API'
+        description:
+          type: string
+          description: Описание задачи
+          example: 'Необходимо реализовать возможность фильтрации задач по автору и исполнителю'
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        priority:
+          $ref: '#/components/schemas/TaskPriority'
+        author:
+          $ref: '#/components/schemas/User'
+        assignee:
+          $ref: '#/components/schemas/User'
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 101
+          description: Уникальный идентификатор комментария
+        content:
+          type: string
+          example: 'Отличная идея!'
+          description: Текст комментария
+        createdAt:
+          type: string
+          format: date-time
+          example: '2024-01-03T15:00:00Z'
+          description: Дата и время создания комментария
+        author:
+          $ref: '#/components/schemas/User'
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 42
+          description: Уникальный идентификатор пользователя
+        firstName:
+          type: string
+          example: 'Иван'
+          description: Имя пользователя
+        lastName:
+          type: string
+          example: 'Петров'
+          description: Фамилия пользователя
+        email:
+          type: string
+          example: 'ivan.petrov@example.com'
+          description: Электронная почта пользователя
+    TaskRq:
+      type: object
+      required:
+        - title
+        - description
+        - assigneeId
+        - status
+        - priority
+      properties:
+        title:
+          type: string
+          example: 'Разработка новой функции API'
+          minLength: 10
+          maxLength: 100
+          pattern: "^(?!\\s*$).+"
+          description: Заголовок задачи
+        description:
+          type: string
+          example: 'Необходимо реализовать возможность фильтрации задач по автору и исполнителю'
+          minLength: 20
+          maxLength: 2000
+          description: Подробное описание задачи
+        assigneeId:
+          type: integer
+          format: int64
+          example: 1
+          description: Уникальный идентификатор пользователя
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        priority:
+          $ref: '#/components/schemas/TaskPriority'
+    TaskStatus:
+      type: string
+      enum:
+        - WAITING
+        - PROCESSING
+        - COMPLETED
+      example: 'WAITING'
+    TaskPriority:
+      type: string
+      description: Приоритет задачи
+      enum:
+        - LOW
+        - MEDIUM
+        - HIGH
+      example: 'HIGH'
+    CommentRq:
+      type: object
+      required:
+        - content
+      properties:
+        content:
+          type: string
+          example: 'Отличная идея!'
+          description: Текст комментария
+    SignUpRq:
+      type: object
+      required:
+        - email
+        - password
+        - firstName
+        - lastName
+      properties:
+        email:
+          type: string
+          format: email
+          example: 'random.user123@example.com'
+          description: Электронная почта пользователя
+          pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        password:
+          type: string
+          format: password
+          example: 'RandomPass123!'
+          description: |
+            Пароль пользователя. 
+            Должен содержать минимум 8 символов, включая:
+            - одну букву в нижнем или верхнем регистре,
+            - одну цифру,
+            - один специальный символ.
+          pattern: '^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$'
+        firstName:
+          type: string
+          example: 'Иван'
+          description: Имя пользователя
+        lastName:
+          type: string
+          example: 'Сидоров'
+          description: Фамилия пользователя
+    SignInRq:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: 'admin@example.com'
+          description: Электронная почта пользователя
+        password:
+          type: string
+          format: password
+          example: 'Test123456!'
+          description: Пароль пользователя
+    Jwt:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT-токен для авторизации
+          example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: Числовой код ошибки, указывающий тип ошибки.
+          example: 500
+        message:
+          type: string
+          description: Читабельное сообщение с описанием ошибки.
+          example: Сообщение об ошибке
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
